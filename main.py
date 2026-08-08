@@ -1,6 +1,8 @@
+import re
 import streamlit as st
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+
 
 # -------------------------
 # CONFIGURACIÓN
@@ -11,6 +13,7 @@ st.set_page_config(
     page_icon="📄",
     layout="wide"
 )
+
 
 # -------------------------
 # HABILIDADES
@@ -42,6 +45,16 @@ habilidades = [
     "linux"
 ]
 
+
+# -------------------------
+# FUNCIÓN PARA DETECTAR SKILLS
+# -------------------------
+
+def contiene_habilidad(texto, habilidad):
+    patron = r"(?<!\w)" + re.escape(habilidad) + r"(?!\w)"
+    return re.search(patron, texto, re.IGNORECASE) is not None
+
+
 # -------------------------
 # TÍTULO
 # -------------------------
@@ -54,6 +67,7 @@ st.write(
 )
 
 st.divider()
+
 
 # -------------------------
 # INPUTS
@@ -70,6 +84,7 @@ with col1:
         placeholder="Ejemplo: Tengo conocimientos de Python, SQL, GitHub..."
     )
 
+
 with col2:
     st.subheader("Oferta laboral")
 
@@ -79,15 +94,22 @@ with col2:
         placeholder="Ejemplo: Buscamos una persona con Python, SQL y Machine Learning..."
     )
 
+
 # -------------------------
 # ANÁLISIS
 # -------------------------
 
-if st.button("Analizar compatibilidad", type="primary", use_container_width=True):
+if st.button(
+    "Analizar compatibilidad",
+    type="primary",
+    use_container_width=True
+):
 
     if not cv.strip() or not oferta.strip():
 
-        st.warning("Tenés que completar el CV y la oferta laboral.")
+        st.warning(
+            "Tenés que completar el CV y la oferta laboral."
+        )
 
     else:
 
@@ -100,7 +122,9 @@ if st.button("Analizar compatibilidad", type="primary", use_container_width=True
             stop_words=None
         )
 
-        vectores = vectorizador.fit_transform([cv, oferta])
+        vectores = vectorizador.fit_transform(
+            [cv, oferta]
+        )
 
         similitud = cosine_similarity(
             vectores[0:1],
@@ -109,12 +133,10 @@ if st.button("Analizar compatibilidad", type="primary", use_container_width=True
 
         similitud_texto = similitud * 100
 
-        # -------------------------
-        # HABILIDADES
-        # -------------------------
 
-        cv_lower = cv.lower()
-        oferta_lower = oferta.lower()
+        # -------------------------
+        # ANÁLISIS DE HABILIDADES
+        # -------------------------
 
         habilidades_oferta = []
         coincidencias = []
@@ -122,18 +144,33 @@ if st.button("Analizar compatibilidad", type="primary", use_container_width=True
 
         for habilidad in habilidades:
 
-            if habilidad in oferta_lower:
+            if contiene_habilidad(
+                oferta,
+                habilidad
+            ):
 
-                habilidades_oferta.append(habilidad)
+                habilidades_oferta.append(
+                    habilidad
+                )
 
-                if habilidad in cv_lower:
-                    coincidencias.append(habilidad)
+                if contiene_habilidad(
+                    cv,
+                    habilidad
+                ):
+
+                    coincidencias.append(
+                        habilidad
+                    )
 
                 else:
-                    faltantes.append(habilidad)
+
+                    faltantes.append(
+                        habilidad
+                    )
+
 
         # -------------------------
-        # COBERTURA
+        # COBERTURA DE HABILIDADES
         # -------------------------
 
         if len(habilidades_oferta) > 0:
@@ -144,13 +181,19 @@ if st.button("Analizar compatibilidad", type="primary", use_container_width=True
             ) * 100
 
         else:
+
             cobertura = 0
 
-        # Puntaje combinado
+
+        # -------------------------
+        # PUNTAJE FINAL
+        # -------------------------
+
         puntaje_final = (
             similitud_texto * 0.4
             + cobertura * 0.6
         )
+
 
         # -------------------------
         # RESULTADOS
@@ -158,7 +201,9 @@ if st.button("Analizar compatibilidad", type="primary", use_container_width=True
 
         st.divider()
 
-        st.header("Resultado del análisis")
+        st.header(
+            "Resultado del análisis"
+        )
 
         m1, m2, m3 = st.columns(3)
 
@@ -178,8 +223,12 @@ if st.button("Analizar compatibilidad", type="primary", use_container_width=True
         )
 
         st.progress(
-            min(int(puntaje_final), 100) / 100
+            min(
+                int(puntaje_final),
+                100
+            ) / 100
         )
+
 
         # -------------------------
         # INTERPRETACIÓN
@@ -194,24 +243,30 @@ if st.button("Analizar compatibilidad", type="primary", use_container_width=True
         elif puntaje_final >= 50:
 
             st.info(
-                "Compatibilidad media. Hay algunos puntos que podrías mejorar."
+                "Compatibilidad media. "
+                "Hay algunos puntos que podrías mejorar."
             )
 
         else:
 
             st.warning(
-                "Compatibilidad baja. El CV podría adaptarse mejor a esta oferta."
+                "Compatibilidad baja. "
+                "El CV podría adaptarse mejor a esta oferta."
             )
 
+
         # -------------------------
-        # SKILLS
+        # HABILIDADES
         # -------------------------
 
         izquierda, derecha = st.columns(2)
 
+
         with izquierda:
 
-            st.subheader("Habilidades coincidentes")
+            st.subheader(
+                "Habilidades coincidentes"
+            )
 
             if coincidencias:
 
@@ -219,21 +274,32 @@ if st.button("Analizar compatibilidad", type="primary", use_container_width=True
 
                     nombre = (
                         habilidad.upper()
-                        if habilidad in ["sql", "html", "css", "aws"]
+                        if habilidad in [
+                            "sql",
+                            "html",
+                            "css",
+                            "aws"
+                        ]
                         else habilidad.title()
                     )
 
-                    st.write(f"✅ {nombre}")
+                    st.write(
+                        f"✅ {nombre}"
+                    )
 
             else:
 
                 st.write(
-                    "No se detectaron habilidades coincidentes."
+                    "No se detectaron "
+                    "habilidades coincidentes."
                 )
+
 
         with derecha:
 
-            st.subheader("Habilidades faltantes")
+            st.subheader(
+                "Habilidades faltantes"
+            )
 
             if faltantes:
 
@@ -241,17 +307,26 @@ if st.button("Analizar compatibilidad", type="primary", use_container_width=True
 
                     nombre = (
                         habilidad.upper()
-                        if habilidad in ["sql", "html", "css", "aws"]
+                        if habilidad in [
+                            "sql",
+                            "html",
+                            "css",
+                            "aws"
+                        ]
                         else habilidad.title()
                     )
 
-                    st.write(f"❌ {nombre}")
+                    st.write(
+                        f"❌ {nombre}"
+                    )
 
             else:
 
                 st.write(
-                    "No se detectaron habilidades faltantes."
+                    "No se detectaron "
+                    "habilidades faltantes."
                 )
+
 
         # -------------------------
         # RECOMENDACIÓN
@@ -259,34 +334,52 @@ if st.button("Analizar compatibilidad", type="primary", use_container_width=True
 
         st.divider()
 
-        st.subheader("Recomendación")
+        st.subheader(
+            "Recomendación"
+        )
 
         if faltantes:
 
             skills = ", ".join(
-                habilidad.title()
+                habilidad.upper()
+                if habilidad in [
+                    "sql",
+                    "html",
+                    "css",
+                    "aws"
+                ]
+                else habilidad.title()
                 for habilidad in faltantes
             )
 
             st.write(
-                f"La oferta menciona habilidades que no aparecen "
-                f"en tu CV: **{skills}**."
+                f"La oferta menciona habilidades "
+                f"que no aparecen en tu CV: "
+                f"**{skills}**."
             )
 
             st.write(
-                "Si realmente tenés experiencia con alguna de ellas, "
-                "considerá agregarla de forma clara en tu CV."
+                "Si realmente tenés experiencia "
+                "con alguna de ellas, considerá "
+                "agregarla de forma clara en tu CV."
             )
 
         else:
 
             st.write(
-                "Tu CV incluye todas las habilidades técnicas "
-                "que el sistema detectó en la oferta."
+                "Tu CV incluye todas las habilidades "
+                "técnicas que el sistema detectó "
+                "en la oferta."
             )
+
+
+# -------------------------
+# PIE DE PÁGINA
+# -------------------------
 
 st.divider()
 
 st.caption(
-    "AI CV Analyzer · Python · NLP · Scikit-learn · Streamlit"
+    "AI CV Analyzer · Python · NLP · "
+    "Scikit-learn · Streamlit"
 )
